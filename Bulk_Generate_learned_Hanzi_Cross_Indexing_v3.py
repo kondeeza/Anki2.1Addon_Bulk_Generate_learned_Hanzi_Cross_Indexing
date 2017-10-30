@@ -48,6 +48,7 @@ master_Freq_Field = 'FrequencyRank'
 master_Pinyin_Field = 'Pinyin'
 master_Pinyin2_Field = 'Pinyin 2'
 master_meaning_Field = 'Meaning'
+Master_to_Corresponding_Slave_Field_List = ''
 # if data exists in Output_SrcField, should we overwrite it?
 OVERWRITE_DST_FIELD= ''
 
@@ -69,7 +70,7 @@ def reload_config():
     global master_deckName
     global master_Auto_Synced_Hint_SrcField
     global Enable_Optional_Custom_MasterSlaveSyncFieldList
-
+    global Master_to_Corresponding_Slave_Field_List
 
     config = mw.addonManager.getConfig(__name__)
     master_modelName = config['01_master_modelName']
@@ -86,6 +87,12 @@ def reload_config():
     master_Auto_Synced_Hint_SrcField = config['11_master_Auto_Synced_Hint_SrcField']
     slave_Model_Sentence_SPinyin_SMeaning_SAudio_List = config['16_slave_Model_Sentence_SPinyin_SMeaning_SAudio_List']
     Enable_Optional_Custom_MasterSlaveSyncFieldList = config['13_Enable_Optional_Custom_MasterSlaveSyncFieldList']
+    Master_to_Corresponding_Slave_Field_List = config['17_Master_to_Corresponding_Slave_Field_List']
+
+def validateFieldList(nids,fieldList):
+    # TODO: 1. validate Master & Slave Note exist, Deck exist 2. validate master and slave fields exist 3. also validate correct field list syntax input
+    # TODO: if validate did not pass (i.e field not exist), prompt user and abort program. else, return true and proceed. This is for simplifying Hanzi and kanji validation compatability process
+    return true
 
 def createAnkiNote(hanziToAddNoteList,masterNoteModelFile):
     mw.checkpoint("Manual Create Note")
