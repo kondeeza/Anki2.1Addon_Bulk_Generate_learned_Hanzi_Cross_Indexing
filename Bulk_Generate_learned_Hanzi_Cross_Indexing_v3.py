@@ -8,7 +8,7 @@
 # Sync Hint field. maybe for all note that shared audio file, allowing user to mark field with ** or something to be the most recent update. or maybe just simply copy along the note field to master.
 # GUI? nah
 # Factorise , i.e. Move all pre validation of note field etc into prevalidate() or something. then make reporting info more informative
-# Factorise , remove fuzzy shotgun coding, or maybe seperate into different python
+# Factorise , remove fuzzy shotgun coding, or maybe seperate into different python. test git commmit
 
 ##########################################################################
 
