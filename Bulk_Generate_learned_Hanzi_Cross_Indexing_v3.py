@@ -89,7 +89,7 @@ def reload_config():
     Enable_Optional_Custom_MasterSlaveSyncFieldList = config['13_Enable_Optional_Custom_MasterSlaveSyncFieldList']
     Master_to_Corresponding_Slave_Field_List = config['17_Master_to_Corresponding_Slave_Field_List']
 
-def validateFieldList(nids,fieldList):
+def validateFieldList(nids):
     # TODO: 1. validate Master & Slave Note exist, Deck exist 2. validate master and slave fields exist 3. also validate correct field list syntax input
     # TODO: if validate did not pass (i.e field not exist), prompt user and abort program. else, return true and proceed. This is for simplifying Hanzi and kanji validation compatability process
     return true
@@ -152,9 +152,21 @@ def createAnkiNote(hanziToAddNoteList,masterNoteModelFile):
     mw.reset()
     showInfo( "All done !")
 
-def get_Correct_Slave_List_For_Current_Note(note):
+def get_Correct_Slave_Schema_List_For_Current_Note(note):
+        # this will return the correct slave schema for current note input.
+        # result would be from one of the list inside 17_Master_to_Corresponding_Slave_Field_List
+        # for example, result could be
+        # [
+        #   ["HSK",
+        #   ["SentenceSimplified","Auto_Sentence",true],
+        #   ["SentencePinyinMarks","Auto_SR",true],
+        #   ["SentenceMeaning","Auto_ST",true],
+        #   ["SentenceAudio","Auto_SA",true],
+        #   ["Note","Auto_Synced_Hint",true],
+        #   ["Auto_SawSentenceExample","Key"]
+        # ]
         result = []
-        for k in slave_Model_Sentence_SPinyin_SMeaning_SAudio_List:
+        for k in Master_to_Corresponding_Slave_Field_List:
             if k[0] in note.model()['name']:
                 result = k
         return result
@@ -178,15 +190,16 @@ def Generate_Slave_Hanzi_Index(nids):
     for nid in nids:
         #showInfo ("Found note: %s" % (nid))
         note = mw.col.getNote(nid)
-        mSlaveList = get_Correct_Slave_List_For_Current_Note(note)
-        if not mSlaveList:
+        cSlaveSchema = get_Correct_Slave_Schema_List_For_Current_Note(note)
+        if not cSlaveSchema:
             #showInfo ("no Note field matched")
             warning_counter += 1
             warning_slaveModelNotFound += 1
             continue
         src_slave_Sentence = None
-        if mSlaveList[1] in note:
-            src_slave_Sentence = mSlaveList[1]
+        # check to see if note indeed contain the field from cSlaveSchema. This should be moved to validation() later
+        if cSlaveSchema[1] in note:
+            src_slave_Sentence = cSlaveSchema[1]
         if not src_slave_Sentence:
             # no src_slave_Sentence field
             #showInfo ("--> Field %s not found." % (slave_Sentence_SrcField))
@@ -199,20 +212,20 @@ def Generate_Slave_Hanzi_Index(nids):
             # showInfo ("--> Everything should have worked. Trying Regex")
             for x in note[src_slave_Sentence]:
                if x in HanziOfHanziFreqList:
-                   NoteOf_mSlaveList = []
+                   NoteOf_cSlaveSchema = []
                    currentloopCount = 0
-                   for i in mSlaveList:
+                   for i in cSlaveSchema:
                         if currentloopCount !=0:
                             if isinstance(i, str):
-                                NoteOf_mSlaveList.append(note[i])
+                                NoteOf_cSlaveSchema.append(note[i])
                             elif isinstance(i, list):
-                                NoteOf_mSlaveList.append([i[0],note[i[1]]])
+                                NoteOf_cSlaveSchema.append([i[0],note[i[1]]])
                         currentloopCount += 1
                    if x not in Slave_Hanzi_Dict:
-                        Slave_Hanzi_Dict[x] = [NoteOf_mSlaveList]
+                        Slave_Hanzi_Dict[x] = [NoteOf_cSlaveSchema]
                         info_Slave_Hanzi_indexed += 1
                    else: 
-                        Slave_Hanzi_Dict[x].append(NoteOf_mSlaveList)
+                        Slave_Hanzi_Dict[x].append(NoteOf_cSlaveSchema)
                         info_Slave_Hanzi_indexed += 1
                else:
                     info_Slave_Hanzi_not_in_Hanzi_Frequency_List += 1
@@ -245,7 +258,10 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
     with open(os.path.join(__location__, "HanziFrequencyList.txt") , "r",  encoding="utf-8") as f:
        HanziFreqList = [line.split('\t') for line in f]
 
-    showInfo ("Beginning BulkGenerateLearned_Hanzi_Cross_Indexing with this config:\n master_modelName: %s \n master_Hanzi_SrcField: %s \n master_Auto_Sentence_SrcField: %s \n master_Auto_SR_SrcField: %s \n master_Auto_ST_SrcField: %s \n master_Auto_SA_SrcField: %s \n master_Auto_SentenceF_SrcField: %s \n master_Auto_SR_F_SrcField: %s \n master_Auto_ST_F_SrcField: %s \n OVERWRITE_DST_FIELD: %s \n slave_Model_Sentence_SPinyin_SMeaning_SAudio_List: %s " %(master_modelName,master_Hanzi_SrcField,master_Auto_Sentence_SrcField,master_Auto_SR_SrcField,master_Auto_ST_SrcField,master_Auto_SA_SrcField,master_Auto_SentenceF_SrcField,master_Auto_SR_F_SrcField,master_Auto_ST_F_SrcField,OVERWRITE_DST_FIELD, str(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List) ))
+    # showInfo ("Beginning BulkGenerateLearned_Hanzi_Cross_Indexing with this config:\n master_modelName: %s \n master_Hanzi_SrcField: %s \n master_Auto_Sentence_SrcField: %s \n master_Auto_SR_SrcField: %s \n master_Auto_ST_SrcField: %s \n master_Auto_SA_SrcField: %s \n master_Auto_SentenceF_SrcField: %s \n master_Auto_SR_F_SrcField: %s \n master_Auto_ST_F_SrcField: %s \n OVERWRITE_DST_FIELD: %s \n slave_Model_Sentence_SPinyin_SMeaning_SAudio_List: %s " %(master_modelName,master_Hanzi_SrcField,master_Auto_Sentence_SrcField,master_Auto_SR_SrcField,master_Auto_ST_SrcField,master_Auto_SA_SrcField,master_Auto_SentenceF_SrcField,master_Auto_SR_F_SrcField,master_Auto_ST_F_SrcField,OVERWRITE_DST_FIELD, str(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List) ))
+    showInfo("Begins BulkGenerateLearned_Hanzi_Cross_Indexing with this config:\n master_modelName: %s \n master_Hanzi_SrcField: %s \n Master_to_Corresponding_Slave_Field_List %s \n OVERWRITE_DST_FIELD: %s" %(master_modelName, master_Hanzi_SrcField, str(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List), OVERWRITE_DST_FIELD ))
+    validateFieldList(nids)
+    # TODO: add abort clause if validate return false
     Master_Hanzi_Dict = {}
     Slave_Hanzi_Dict = Generate_Slave_Hanzi_Index(nids)
     info_Distinct_Hanzi_In_Slave_Deck = len(Slave_Hanzi_Dict)
