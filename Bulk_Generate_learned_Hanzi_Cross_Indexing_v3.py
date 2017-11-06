@@ -198,7 +198,9 @@ def Generate_Slave_Hanzi_Index(nids):
             continue
         src_slave_Sentence = None
         # check to see if note indeed contain the field from cSlaveSchema. This should be moved to validation() later
-        if cSlaveSchema[1] in note:
+        # cSlaveSchema[0] will always be its note type name e.g. "My Basic Note Type"
+        # cSlaveSchema[1][0] will always be slave sentence schema e.g. "Vocab Sentence Field"
+        if cSlaveSchema[1][0] in note:
             src_slave_Sentence = cSlaveSchema[1]
         if not src_slave_Sentence:
             # no src_slave_Sentence field
@@ -209,23 +211,27 @@ def Generate_Slave_Hanzi_Index(nids):
 
         try:
             
-            # showInfo ("--> Everything should have worked. Trying Regex")
+            # This code turn string from slave_Sentence Field into char, then check for each char
+            # whether it is in HanziOfHanziFreqList or not, if it is then that char is Hanzi character
+            # and it will be indexed in Slave_Hanzi_Dict[x] where x = Hanzi
+            # Slave_Hanzi_Dict[x] will return
             for x in note[src_slave_Sentence]:
                if x in HanziOfHanziFreqList:
-                   NoteOf_cSlaveSchema = []
+                   cSlave_ToIndex_Note = []
+                   # currentoopCount is used to skip cSlaveSchema[0], a.k.a. Slave note name, from being added into Slave_Hanzi_Dict[x]
                    currentloopCount = 0
                    for i in cSlaveSchema:
                         if currentloopCount !=0:
                             if isinstance(i, str):
-                                NoteOf_cSlaveSchema.append(note[i])
+                                cSlave_ToIndex_Note.append(note[i])
                             elif isinstance(i, list):
-                                NoteOf_cSlaveSchema.append([i[0],note[i[1]]])
+                                cSlave_ToIndex_Note.append([i[0],note[i[1]]])
                         currentloopCount += 1
                    if x not in Slave_Hanzi_Dict:
-                        Slave_Hanzi_Dict[x] = [NoteOf_cSlaveSchema]
+                        Slave_Hanzi_Dict[x] = [cSlave_ToIndex_Note]
                         info_Slave_Hanzi_indexed += 1
                    else: 
-                        Slave_Hanzi_Dict[x].append(NoteOf_cSlaveSchema)
+                        Slave_Hanzi_Dict[x].append(cSlave_ToIndex_Note)
                         info_Slave_Hanzi_indexed += 1
                else:
                     info_Slave_Hanzi_not_in_Hanzi_Frequency_List += 1
