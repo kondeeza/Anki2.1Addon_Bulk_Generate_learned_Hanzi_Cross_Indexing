@@ -32,8 +32,13 @@ def getKanjiDefinition(kanjiInput):
             if 'dic_ref'in KanjiDefition_Result['dic_number']:
                 # nelson_n = [elem['#text'] for elem in KanjiDefition_Result['dic_number']['dic_ref'] if elem["-dr_type"] == 'nelson_n']
                 if isinstance(KanjiDefition_Result['dic_number']['dic_ref'],list):
-                    KanjiDef_nelson_n = [elem['#text'] for elem in KanjiDefition_Result['dic_number']['dic_ref'] if elem['-dr_type'] == 'nelson_n'][0]
-                    KanjiDef_heisig = [elem['#text'] for elem in KanjiDefition_Result['dic_number']['dic_ref'] if elem['-dr_type'] == 'heisig'][0]
+                    KanjiDef_nelson_n = [elem['#text'] for elem in KanjiDefition_Result['dic_number']['dic_ref'] if elem['-dr_type'] == 'nelson_n']
+                    if KanjiDef_nelson_n:
+                        KanjiDef_nelson_n = KanjiDef_nelson_n[0]
+                    # KanjiDef_heisig = [elem['#text'] for elem in KanjiDefition_Result['dic_number']['dic_ref'] if elem['-dr_type'] == 'heisig'][0]  . Old version that gave error if 'heisig' dict did not exist because you are trying to read 'heisig'][0]
+                    KanjiDef_heisig = [elem['#text'] for elem in KanjiDefition_Result['dic_number']['dic_ref'] if elem['-dr_type'] == 'heisig']
+                    if KanjiDef_heisig:
+                        KanjiDef_heisig = KanjiDef_heisig[0]
 
         if 'rmgroup' in KanjiDefition_Result['reading_meaning']:
             if 'meaning' in KanjiDefition_Result['reading_meaning']['rmgroup']:
@@ -63,5 +68,42 @@ def getKanjiDefinition(kanjiInput):
 
 #print(data["kanjidic2"]["character"][0]["literal"])
 #print(data["kanjidic2"]["character"][0])
-getKanjiDefinition('模')
-getKanjiDefinition('垬')
+
+for x in range(0,1):
+    getKanjiDefinition('模')
+    getKanjiDefinition('垬')
+    getKanjiDefinition('幣')
+    getKanjiDefinition('藍')
+    getKanjiDefinition('獻')
+    getKanjiDefinition('萊')
+    getKanjiDefinition('譯')
+    getKanjiDefinition('奪')
+    getKanjiDefinition('燒')
+    getKanjiDefinition('觸')
+    getKanjiDefinition('課')
+    getKanjiDefinition('牆')
+    getKanjiDefinition('襲')
+    getKanjiDefinition('罰')
+    getKanjiDefinition('俠')
+    getKanjiDefinition('廳')
+    getKanjiDefinition('側')
+    getKanjiDefinition('韓')
+    getKanjiDefinition('債')
+    getKanjiDefinition('慣')
+    getKanjiDefinition('猶')
+    getKanjiDefinition('掛')
+    getKanjiDefinition('奬')
+    getKanjiDefinition('紹')
+    getKanjiDefinition('縱')
+    getKanjiDefinition('訊')
+    getKanjiDefinition('徹')
+    getKanjiDefinition('烏')
+    getKanjiDefinition('瑪')
+    getKanjiDefinition('鏡')
+    getKanjiDefinition('煩')
+    getKanjiDefinition('簽')
+    getKanjiDefinition('癥')
+    getKanjiDefinition('傾')
+    getKanjiDefinition('鳥')
+    getKanjiDefinition('轟')
+
