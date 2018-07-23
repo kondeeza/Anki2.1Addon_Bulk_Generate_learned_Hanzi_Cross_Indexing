@@ -73,124 +73,98 @@ class HanziIndexDialog(QDialog):
         reload_config()
         grid = QGridLayout()
         self.setLayout(grid)
-        names = [['Kanji Deck Name', '', '', '','','','','','',
+
+        names = ['Kanji Deck Name', '', '', '','','','','','',
+                 ' ', '', '', '', '', '', '', '', '',
                  'Kanji Notetype','KanjiDeck Auto_Sentence', 'KanjiDeck Auto_Sentence Reading', 'KanjiDeck Auto_Sentence Translation', 'KanjiDeck Auto_Sentence Audio', 'KanjiDeck Auto_Hint', 'Others_1','Others_2','Others_3',
+                 '', '', '', '', '', '', '', '', '',
                  'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1','Others_2','Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1','Others_2','Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1','Others_2','Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1','Others_2','Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1', 'Others_2', 'Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1', 'Others_2', 'Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1', 'Others_2', 'Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1', 'Others_2', 'Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1', 'Others_2', 'Others_3',
-                 'Vocab Notetype','VocabDeck Sentence', 'VocabDeck Sentence Reading', 'VocabDeck Sentence Translation', 'VocabDeck Sentence Audio', 'VocabDeck Hint', 'Others_1', 'Others_2', 'Others_3',],['lol']]
+                 '', '', '', '', '', '', '', '', '',]
 
 
 
-        positions = [(i, j) for i in range(12) for j in range(9)]
+        positions = [(i, j) for i in range(6) for j in range(9)]
 
-        for position, name in zip(positions, names[0]):
+        for position, name in zip(positions, names):
 
             if name == '':
                 continue
-            button = QPushButton(name)
+            label = QLabel(name)
             #showInfo("adding grid widget, button = %s , and position =  %s" % (name, str(position)))
-            grid.addWidget(button, *position)
+            grid.addWidget(label, *position)
 
+        save_button = QPushButton("Save Config")
+        run_button = QPushButton("Run")
+        cancel_button = QPushButton("Cancel")
+        grid.addWidget(QLabel(" "), 16, 0)
+        grid.addWidget(save_button, 17,6)
+        grid.addWidget(run_button, 17,7)
+        grid.addWidget(cancel_button, 17,8)
 
         "Deck Selection Box"
         self.dsel = QComboBox()
         decks = self._getDeckLists()
         self.dsel.addItems([master_deckName] + decks)
-        showInfo(master_deckName)
+        #showInfo(master_deckName)
         #self.dsel.setItemText(3, "aaaaaaa")
-        grid.addWidget(self.dsel, 12, 0)
+        grid.addWidget(self.dsel, 0, 1)
 
+
+        self.kanjiNotebox = QComboBox()
+        noteType = self._getNoteTypeLists()
+        self.kanjiNotebox.addItems([master_modelName] + noteType)
+        self.kanjiNotebox.currentIndexChanged.connect(
+            lambda state, x="QComboBox_Note_Updated_KJ": self.onQBoxUpdate(x))
+        grid.addWidget(self.kanjiNotebox, 3, 0)
+
+        self.kanjiFieldbox = [None] * 8
+        for i in range(0,8):
+            "Kanji Field Selection Box"
+            self.kanjiFieldbox[i] = QComboBox()
+            fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
+            self.kanjiFieldbox[i].addItems(fields)
+            grid.addWidget(self.kanjiFieldbox[i], 3, int(i+1))
+
+        """
         "NoteType Selection Box"
         self.nsel = QComboBox()
         noteType = self._getNoteTypeLists()
         self.nsel.addItems([master_modelName] + noteType)
         self.nsel.currentIndexChanged.connect(lambda state, x="QComboBox_Note_Updated": self.onQBoxUpdate(x))
         grid.addWidget(self.nsel, 12, 1)
+        """
 
-        self.vocabNoteBox = [None] * 3
-        for i in range(0,3):
-            "NoteType Selection Box"
+        "NoteType Selection Box"
+        self.vocabNoteBox = [None] * 10
+        for i in range(0,10):
+
             self.vocabNoteBox[i] = QComboBox()
             noteType = self._getNoteTypeLists()
             self.vocabNoteBox[i].addItems([master_modelName] + noteType)
             self.vocabNoteBox[i].currentIndexChanged.connect(lambda state, x="QComboBox_Note_Updated_%d" % i: self.onQBoxUpdate(x))
-            grid.addWidget(self.vocabNoteBox[i], int(i+13), 1)
+            grid.addWidget(self.vocabNoteBox[i], int(i+5), 0)
 
-
+        """
         "Field Selection Box"
         self.fsel = QComboBox()
         fields = self._getFieldsFromNoteType(self.nsel.currentText())
         self.fsel.addItems(fields)
         grid.addWidget(self.fsel, 12, 2)
+        """
 
-        self.vocabFieldBox = [None] * 3
-        for i in range(0,3):
-            "Field Selection Box"
-            self.vocabFieldBox[i] = QComboBox()
-            fields = self._getFieldsFromNoteType(self.vocabNoteBox[i].currentText())
-            self.vocabFieldBox[i].addItems(fields)
-            grid.addWidget(self.vocabFieldBox[i], int(i+13), 2)
+        "Field Selection Box"
+        self.vocabFieldBox_YX = [[None for x in range(8)] for y in range(10)]
+        # self.vocabFieldBox = [None] * 10
+        for y in range(0, 10):
+            for x in range(0, 8):
+                self.vocabFieldBox_YX[y][x] = QComboBox()
+                fields = self._getFieldsFromNoteType(self.vocabNoteBox[y].currentText())
+                self.vocabFieldBox_YX[y][x].addItems(fields)
+                grid.addWidget(self.vocabFieldBox_YX[y][x], int(y+5), int(1+x))
 
         self.move(300, 150)
-        self.setWindowTitle('Calculator')
 
-        """
-        tlabel = QLabel("Content to add to or replace with:")
-        top_hbox = QHBoxLayout()
-        top_hbox.addWidget(tlabel)
-        top_hbox.insertStretch(1, stretch=1)
-        
 
-        flabel = QLabel("In this field:")
-        self.fsel = QComboBox()
-        fields = self._getFields()
-        self.fsel.addItems(fields)
-        f_hbox = QHBoxLayout()
-        f_hbox.addWidget(flabel)
-        f_hbox.addWidget(self.fsel)
-        f_hbox.setAlignment(Qt.AlignLeft)
-
-        button_box = QDialogButtonBox(Qt.Horizontal, self)
-        adda_btn = button_box.addButton("Add &after",
-                                        QDialogButtonBox.ActionRole)
-        addb_btn = button_box.addButton("Add &before",
-                                        QDialogButtonBox.ActionRole)
-        replace_btn = button_box.addButton("&Replace",
-                                           QDialogButtonBox.ActionRole)
-        close_btn = button_box.addButton("&Cancel",
-                                         QDialogButtonBox.RejectRole)
-        adda_btn.setToolTip("Add after existing field contents")
-        addb_btn.setToolTip("Add before existing field contents")
-        replace_btn.setToolTip("Replace existing field contents")
-        adda_btn.clicked.connect(lambda state, x="adda": self.onConfirm(x))
-        addb_btn.clicked.connect(lambda state, x="addb": self.onConfirm(x))
-        replace_btn.clicked.connect(lambda state, x="replace": self.onConfirm(x))
-        close_btn.clicked.connect(self.close)
-
-        self.cb_html = QCheckBox(self)
-        self.cb_html.setText("Insert as HTML")
-        self.cb_html.setChecked(False)
-        s = QShortcut(QKeySequence(_("Alt+H")),
-                      self, activated=lambda: self.cb_html.setChecked(True))
-
-        bottom_hbox = QHBoxLayout()
-        bottom_hbox.addWidget(self.cb_html)
-        bottom_hbox.addWidget(button_box)
-
-        vbox_main = QVBoxLayout()
-        vbox_main.addLayout(top_hbox)
-        vbox_main.addWidget(self.tedit)
-        vbox_main.addLayout(f_hbox)
-        vbox_main.addLayout(bottom_hbox)
-        self.setLayout(vbox_main)
-        """
         self.setMinimumWidth(540)
         self.setMinimumHeight(400)
         self.setWindowTitle("Hanzi Index Dialog Configuration page")
@@ -221,14 +195,22 @@ class HanziIndexDialog(QDialog):
     def onQBoxUpdate(self, mode):
             # if mode == "QComboBox_Note_Updated":
             showInfo("Box updated, mode is %s" % mode)
+            """
             self.fsel.clear()
             fields = self._getFieldsFromNoteType(self.nsel.currentText())
             self.fsel.addItems(fields)
+            """
+            for i in range(0, 8):
+                self.kanjiFieldbox[i].clear()
+                fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
+                self.kanjiFieldbox[i].addItems(fields)
 
-            for i in range(0, 3):
-                self.vocabFieldBox[i].clear()
-                fields = self._getFieldsFromNoteType(self.vocabNoteBox[i].currentText())
-                self.vocabFieldBox[i].addItems(fields)
+
+            for y in range(0, 10):
+                for x in range(0, 8):
+                    self.vocabFieldBox_YX[y][x].clear()
+                    fields = self._getFieldsFromNoteType(self.vocabNoteBox[y].currentText())
+                    self.vocabFieldBox_YX[y][x].addItems(fields)
 
         # self.close()
 
