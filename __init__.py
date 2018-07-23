@@ -6,4 +6,4 @@
 # Copyright: (c) 2017 Glutanimate <https://glutanimate.com/>
 # License: GNU AGPLv3 <https://www.gnu.org/licenses/agpl.html>
 
-from . import Bulk_Generate_learned_Hanzi_Cross_Indexing_v3
+from . import Bulk_Generate_learned_Hanzi_Cross_Indexing_v4
