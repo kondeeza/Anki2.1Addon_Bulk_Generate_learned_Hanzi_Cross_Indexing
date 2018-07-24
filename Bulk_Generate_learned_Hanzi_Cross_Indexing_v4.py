@@ -21,7 +21,7 @@ from aqt.qt import *
 # from PyQt4.QtGui import *
 from anki.hooks import addHook
 from aqt import mw
-from aqt.utils import showWarning, showInfo
+from aqt.utils import showWarning, showInfo, tooltip
 import re
 import platform
 import re
@@ -39,24 +39,28 @@ master_Auto_Sentence_SrcField = ''
 master_Auto_SR_SrcField = ''
 master_Auto_ST_SrcField = ''
 master_Auto_SA_SrcField = ''
-master_Auto_SentenceF_SrcField = ''
-master_Auto_SR_F_SrcField = ''
-master_Auto_ST_F_SrcField = ''
+#master_Auto_SentenceF_SrcField = ''
+#master_Auto_SR_F_SrcField = ''
+#master_Auto_ST_F_SrcField = ''
 master_Auto_Synced_Hint_SrcField = ''
 master_deckName = ''
 Enable_Optional_Custom_MasterSlaveSyncFieldList = ''
-Optional_Custom_MasterSlaveSyncFieldList = ''
 master_Traditional_Field = 'Traditional'
 master_Freq_Field = 'FrequencyRank'
 master_Pinyin_Field = 'Pinyin'
 master_Pinyin2_Field = 'Pinyin 2'
 master_meaning_Field = 'Meaning'
+master_CardCreate_Other1_field = 'Meaning'
+master_CardCreate_Other2_field = 'Meaning'
 Master_to_Corresponding_Slave_Field_List = ''
+#master_other1_Field = ''
+#master_other2_Field = ''
+#master_other3_Field = ''
 # if data exists in Output_SrcField, should we overwrite it?
 OVERWRITE_DST_FIELD = ''
 
 slave_Model_Sentence_SPinyin_SMeaning_SAudio_List = []
-
+ConfigDict = {" ": " "}
 
 
 
@@ -74,7 +78,7 @@ class HanziIndexDialog(QDialog):
         grid = QGridLayout()
         self.setLayout(grid)
 
-        names = ['Kanji Deck Name', '', '', '','','','','','',
+        names = ['Kanji Deck Name', 'Kanji Hanzi', 'Kanji Traditional', 'Kanji Frequency','Kanji Pinyin','Kanji Pinyin2','Kanji Meaning','','',
                  ' ', '', '', '', '', '', '', '', '',
                  'Kanji Notetype','KanjiDeck Auto_Sentence', 'KanjiDeck Auto_Sentence Reading', 'KanjiDeck Auto_Sentence Translation', 'KanjiDeck Auto_Sentence Audio', 'KanjiDeck Auto_Hint', 'Others_1','Others_2','Others_3',
                  '', '', '', '', '', '', '', '', '',
@@ -94,8 +98,10 @@ class HanziIndexDialog(QDialog):
             grid.addWidget(label, *position)
 
         save_button = QPushButton("Save Config")
+        save_button.clicked.connect(lambda state, x="save": self.onConfirm(x))
         run_button = QPushButton("Run")
         cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.close)
         grid.addWidget(QLabel(" "), 16, 0)
         grid.addWidget(save_button, 17,6)
         grid.addWidget(run_button, 17,7)
@@ -107,7 +113,7 @@ class HanziIndexDialog(QDialog):
         self.dsel.addItems([master_deckName] + decks)
         #showInfo(master_deckName)
         #self.dsel.setItemText(3, "aaaaaaa")
-        grid.addWidget(self.dsel, 0, 1)
+        grid.addWidget(self.dsel, 1, 0)
 
 
         self.kanjiNotebox = QComboBox()
@@ -117,40 +123,39 @@ class HanziIndexDialog(QDialog):
             lambda state, x="QComboBox_Note_Updated_KJ": self.onQBoxUpdate(x))
         grid.addWidget(self.kanjiNotebox, 3, 0)
 
-        self.kanjiFieldbox = [None] * 8
+        Global_KC_Var = [master_Hanzi_SrcField, master_Traditional_Field, master_Freq_Field, master_Pinyin_Field ,master_Pinyin2_Field, master_meaning_Field]
+
+        self.kanjiNewCardFieldbox = [None] * len(Global_KC_Var)
+        for i in range(0,6):
+            "Kanji kanjiNewCardFieldbox"
+            self.kanjiNewCardFieldbox[i] = QComboBox()
+            fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
+            self.kanjiNewCardFieldbox[i].addItems([Global_KC_Var[i]]+fields)
+            grid.addWidget(self.kanjiNewCardFieldbox[i], 1, int(i+1))
+
+        Global_KF_Var = [master_Auto_Sentence_SrcField,master_Auto_SR_SrcField,master_Auto_ST_SrcField,master_Auto_SA_SrcField,master_Auto_Synced_Hint_SrcField," ", " ", " "]
+        self.kanjiFieldbox = [None] * len(Global_KF_Var)
         for i in range(0,8):
             "Kanji Field Selection Box"
             self.kanjiFieldbox[i] = QComboBox()
             fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
-            self.kanjiFieldbox[i].addItems(fields)
+            self.kanjiFieldbox[i].addItems([Global_KF_Var[i]] + fields)
             grid.addWidget(self.kanjiFieldbox[i], 3, int(i+1))
 
-        """
-        "NoteType Selection Box"
-        self.nsel = QComboBox()
-        noteType = self._getNoteTypeLists()
-        self.nsel.addItems([master_modelName] + noteType)
-        self.nsel.currentIndexChanged.connect(lambda state, x="QComboBox_Note_Updated": self.onQBoxUpdate(x))
-        grid.addWidget(self.nsel, 12, 1)
-        """
 
-        "NoteType Selection Box"
         self.vocabNoteBox = [None] * 10
         for i in range(0,10):
 
             self.vocabNoteBox[i] = QComboBox()
             noteType = self._getNoteTypeLists()
-            self.vocabNoteBox[i].addItems([master_modelName] + noteType)
+            if len(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List)-1 >= i:
+                #ran out of slave note type. Stops
+                self.vocabNoteBox[i].addItems([slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[i][0]] + noteType)
+            else:
+                self.vocabNoteBox[i].addItems([" "] + noteType)
             self.vocabNoteBox[i].currentIndexChanged.connect(lambda state, x="QComboBox_Note_Updated_%d" % i: self.onQBoxUpdate(x))
             grid.addWidget(self.vocabNoteBox[i], int(i+5), 0)
 
-        """
-        "Field Selection Box"
-        self.fsel = QComboBox()
-        fields = self._getFieldsFromNoteType(self.nsel.currentText())
-        self.fsel.addItems(fields)
-        grid.addWidget(self.fsel, 12, 2)
-        """
 
         "Field Selection Box"
         self.vocabFieldBox_YX = [[None for x in range(8)] for y in range(10)]
@@ -189,7 +194,10 @@ class HanziIndexDialog(QDialog):
 
     def _getFieldsFromNoteType(self,NoteTypeName):
         model = mw.col.models.byName(NoteTypeName)
-        fields = mw.col.models.fieldNames(model)
+        if model is not None:
+            fields = mw.col.models.fieldNames(model)
+        else:
+            fields = [" "]
         return fields
 
     def onQBoxUpdate(self, mode):
@@ -200,19 +208,71 @@ class HanziIndexDialog(QDialog):
             fields = self._getFieldsFromNoteType(self.nsel.currentText())
             self.fsel.addItems(fields)
             """
-            for i in range(0, 8):
-                self.kanjiFieldbox[i].clear()
-                fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
-                self.kanjiFieldbox[i].addItems(fields)
+
+            if mode == "QComboBox_Note_Updated_KJ":
+                for i in range(0, 8):
+                    self.kanjiFieldbox[i].clear()
+                    fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
+                    self.kanjiFieldbox[i].addItems(fields)
+                for i in range(0, 6):
+                    self.kanjiNewCardFieldbox[i].clear()
+                    fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
+                    self.kanjiNewCardFieldbox[i].addItems(fields)
 
 
             for y in range(0, 10):
-                for x in range(0, 8):
-                    self.vocabFieldBox_YX[y][x].clear()
-                    fields = self._getFieldsFromNoteType(self.vocabNoteBox[y].currentText())
-                    self.vocabFieldBox_YX[y][x].addItems(fields)
+                if mode == "QComboBox_Note_Updated_%d" % y:
+                    for x in range(0, 8):
+                        self.vocabFieldBox_YX[y][x].clear()
+                        fields = self._getFieldsFromNoteType(self.vocabNoteBox[y].currentText())
+                        self.vocabFieldBox_YX[y][x].addItems(fields)
 
         # self.close()
+
+    def onConfirm(self, mode):
+        if mode == "save":
+            global master_modelName
+            global master_deckName
+            showInfo("Saving master_modelName & master_deckName: %s" % mode)
+            master_deckName = self.dsel.currentText()
+            master_modelName = self.kanjiNotebox.currentText()
+            save_config()
+
+def save_config():
+    global master_modelName
+    global master_Hanzi_SrcField
+    global master_Auto_Sentence_SrcField
+    global master_Auto_SR_SrcField
+    global master_Auto_ST_SrcField
+    global master_Auto_SA_SrcField
+    #global master_Auto_SentenceF_SrcField
+    #global master_Auto_SR_F_SrcField
+    #global master_Auto_ST_F_SrcField
+    global OVERWRITE_DST_FIELD
+    global slave_Model_Sentence_SPinyin_SMeaning_SAudio_List
+    global master_deckName
+    global master_Auto_Synced_Hint_SrcField
+    global Enable_Optional_Custom_MasterSlaveSyncFieldList
+    global Master_to_Corresponding_Slave_Field_List
+    global master_Traditional_Field
+    global master_Freq_Field
+    global master_Pinyin_Field
+    global master_Pinyin2_Field
+    global master_meaning_Field
+    global master_CardCreate_Other1_field
+    global master_CardCreate_Other2_field
+    global Master_to_Corresponding_Slave_Field_List
+    #global master_other1_Field
+    #global master_other2_Field
+    #global master_other3_Field
+
+    config = mw.addonManager.getConfig(__name__)
+    config['01_master_modelName'] = master_modelName
+    # config['02_master_Hanzi_SrcField'] = master_Hanzi_SrcField
+    config['10_master_deckName'] = master_deckName
+    mw.addonManager.writeConfig(__name__, config)
+
+
 
 def reload_config():
     global master_modelName
@@ -221,15 +281,26 @@ def reload_config():
     global master_Auto_SR_SrcField
     global master_Auto_ST_SrcField
     global master_Auto_SA_SrcField
-    global master_Auto_SentenceF_SrcField
-    global master_Auto_SR_F_SrcField
-    global master_Auto_ST_F_SrcField
+    #global master_Auto_SentenceF_SrcField
+    #global master_Auto_SR_F_SrcField
+    #global master_Auto_ST_F_SrcField
     global OVERWRITE_DST_FIELD
     global slave_Model_Sentence_SPinyin_SMeaning_SAudio_List
     global master_deckName
     global master_Auto_Synced_Hint_SrcField
     global Enable_Optional_Custom_MasterSlaveSyncFieldList
     global Master_to_Corresponding_Slave_Field_List
+    global master_Traditional_Field
+    global master_Freq_Field
+    global master_Pinyin_Field
+    global master_Pinyin2_Field
+    global master_meaning_Field
+    global master_CardCreate_Other1_field
+    global master_CardCreate_Other2_field
+    global Master_to_Corresponding_Slave_Field_List
+    #global master_other1_Field
+    #global master_other2_Field
+    #global master_other3_Field
 
     config = mw.addonManager.getConfig(__name__)
     master_modelName = config['01_master_modelName']
@@ -238,15 +309,17 @@ def reload_config():
     master_Auto_SR_SrcField = config['04_master_Auto_SR_SrcField']
     master_Auto_ST_SrcField = config['05_master_Auto_ST_SrcField']
     master_Auto_SA_SrcField = config['06_master_Auto_SA_SrcField']
-    master_Auto_SentenceF_SrcField = config['07_master_Auto_SentenceF_SrcField']
-    master_Auto_SR_F_SrcField = config['08_master_Auto_SR_F_SrcField']
-    master_Auto_ST_F_SrcField = config['09_master_Auto_ST_F_SrcField']
+    #master_Auto_SentenceF_SrcField = config['07_master_Auto_SentenceF_SrcField']
+    #master_Auto_SR_F_SrcField = config['08_master_Auto_SR_F_SrcField']
+    #master_Auto_ST_F_SrcField = config['09_master_Auto_ST_F_SrcField']
     OVERWRITE_DST_FIELD = config['15_OVERWRITE_DST_FIELD']
     master_deckName = config['10_master_deckName']
     master_Auto_Synced_Hint_SrcField = config['11_master_Auto_Synced_Hint_SrcField']
     slave_Model_Sentence_SPinyin_SMeaning_SAudio_List = config['16_slave_Model_Sentence_SPinyin_SMeaning_SAudio_List']
     Enable_Optional_Custom_MasterSlaveSyncFieldList = config['13_Enable_Optional_Custom_MasterSlaveSyncFieldList']
     Master_to_Corresponding_Slave_Field_List = config['17_Master_to_Corresponding_Slave_Field_List']
+
+
 
 
 def validateFieldList(nids):
