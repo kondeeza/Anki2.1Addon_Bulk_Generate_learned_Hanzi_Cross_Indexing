@@ -53,14 +53,14 @@ master_meaning_Field = 'Meaning'
 master_CardCreate_Other1_field = 'Meaning'
 master_CardCreate_Other2_field = 'Meaning'
 Master_to_Corresponding_Slave_Field_List = ''
-#master_other1_Field = ''
-#master_other2_Field = ''
-#master_other3_Field = ''
+master_other1_Field = ''
+master_other2_Field = ''
+master_other3_Field = ''
 # if data exists in Output_SrcField, should we overwrite it?
 OVERWRITE_DST_FIELD = ''
 
 slave_Model_Sentence_SPinyin_SMeaning_SAudio_List = []
-ConfigDict = {" ": " "}
+#ConfigDict = {" ": " "}
 
 
 
@@ -78,7 +78,7 @@ class HanziIndexDialog(QDialog):
         grid = QGridLayout()
         self.setLayout(grid)
 
-        names = ['Kanji Deck Name', 'Kanji Hanzi', 'Kanji Traditional', 'Kanji Frequency','Kanji Pinyin','Kanji Pinyin2','Kanji Meaning','','',
+        names = ['Kanji Deck Name', 'Kanji Hanzi', 'Kanji Traditional', 'Kanji Frequency','Kanji Pinyin','Kanji Pinyin2','Kanji Meaning','Kanji Other Field1','Kanji Other Field2',
                  ' ', '', '', '', '', '', '', '', '',
                  'Kanji Notetype','KanjiDeck Auto_Sentence', 'KanjiDeck Auto_Sentence Reading', 'KanjiDeck Auto_Sentence Translation', 'KanjiDeck Auto_Sentence Audio', 'KanjiDeck Auto_Hint', 'Others_1','Others_2','Others_3',
                  '', '', '', '', '', '', '', '', '',
@@ -123,22 +123,24 @@ class HanziIndexDialog(QDialog):
             lambda state, x="QComboBox_Note_Updated_KJ": self.onQBoxUpdate(x))
         grid.addWidget(self.kanjiNotebox, 3, 0)
 
-        Global_KC_Var = [master_Hanzi_SrcField, master_Traditional_Field, master_Freq_Field, master_Pinyin_Field ,master_Pinyin2_Field, master_meaning_Field]
+        Global_KC_Var = [master_Hanzi_SrcField, master_Traditional_Field, master_Freq_Field, master_Pinyin_Field ,master_Pinyin2_Field, master_meaning_Field,master_CardCreate_Other1_field,master_CardCreate_Other2_field]
 
         self.kanjiNewCardFieldbox = [None] * len(Global_KC_Var)
-        for i in range(0,6):
+        for i in range(0,8):
             "Kanji kanjiNewCardFieldbox"
             self.kanjiNewCardFieldbox[i] = QComboBox()
             fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
             self.kanjiNewCardFieldbox[i].addItems([Global_KC_Var[i]]+fields)
             grid.addWidget(self.kanjiNewCardFieldbox[i], 1, int(i+1))
 
-        Global_KF_Var = [master_Auto_Sentence_SrcField,master_Auto_SR_SrcField,master_Auto_ST_SrcField,master_Auto_SA_SrcField,master_Auto_Synced_Hint_SrcField," ", " ", " "]
+        Global_KF_Var = [master_Auto_Sentence_SrcField,master_Auto_SR_SrcField,master_Auto_ST_SrcField,master_Auto_SA_SrcField,master_Auto_Synced_Hint_SrcField,master_other1_Field, master_other2_Field, master_other3_Field]
         self.kanjiFieldbox = [None] * len(Global_KF_Var)
         for i in range(0,8):
             "Kanji Field Selection Box"
             self.kanjiFieldbox[i] = QComboBox()
             fields = self._getFieldsFromNoteType(self.kanjiNotebox.currentText())
+            #showInfo(str(Global_KF_Var[i]))
+            #showInfo(Global_KF_Var[i])
             self.kanjiFieldbox[i].addItems([Global_KF_Var[i]] + fields)
             grid.addWidget(self.kanjiFieldbox[i], 3, int(i+1))
 
@@ -149,13 +151,12 @@ class HanziIndexDialog(QDialog):
             self.vocabNoteBox[i] = QComboBox()
             noteType = self._getNoteTypeLists()
             if len(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List)-1 >= i:
-                #ran out of slave note type. Stops
+                # if not ran out of slave note type. else, just add ' '
                 self.vocabNoteBox[i].addItems([slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[i][0]] + noteType)
             else:
-                self.vocabNoteBox[i].addItems([" "] + noteType)
+                self.vocabNoteBox[i].addItems([""] + noteType)
             self.vocabNoteBox[i].currentIndexChanged.connect(lambda state, x="QComboBox_Note_Updated_%d" % i: self.onQBoxUpdate(x))
             grid.addWidget(self.vocabNoteBox[i], int(i+5), 0)
-
 
         "Field Selection Box"
         self.vocabFieldBox_YX = [[None for x in range(8)] for y in range(10)]
@@ -164,7 +165,13 @@ class HanziIndexDialog(QDialog):
             for x in range(0, 8):
                 self.vocabFieldBox_YX[y][x] = QComboBox()
                 fields = self._getFieldsFromNoteType(self.vocabNoteBox[y].currentText())
-                self.vocabFieldBox_YX[y][x].addItems(fields)
+                if len(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List) - 1 >= y:
+                    if len(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[y]) - 2 >= x:
+                        self.vocabFieldBox_YX[y][x].addItems([slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[y][x+1]] + fields)
+                    else:
+                        self.vocabFieldBox_YX[y][x].addItems([""]+fields)
+                else:
+                    self.vocabFieldBox_YX[y][x].addItems([""]+fields)
                 grid.addWidget(self.vocabFieldBox_YX[y][x], int(y+5), int(1+x))
 
         self.move(300, 150)
@@ -190,14 +197,17 @@ class HanziIndexDialog(QDialog):
     def _getNoteTypeLists(self):
         """Return All Notetype List in Anki DB"""
         #showInfo(str(mw.col.models.allNames()))
-        return mw.col.models.allNames()
+        result = mw.col.models.allNames()
+        result.append("")
+        return result
 
     def _getFieldsFromNoteType(self,NoteTypeName):
         model = mw.col.models.byName(NoteTypeName)
         if model is not None:
             fields = mw.col.models.fieldNames(model)
+            fields.append("")
         else:
-            fields = [" "]
+            fields = [""]
         return fields
 
     def onQBoxUpdate(self, mode):
@@ -230,12 +240,99 @@ class HanziIndexDialog(QDialog):
         # self.close()
 
     def onConfirm(self, mode):
+        """Current save limitation is on the kanji(master) card creation field. The variable name is hard wired"""
         if mode == "save":
             global master_modelName
+            global master_Hanzi_SrcField
+            global master_Auto_Sentence_SrcField
+            global master_Auto_SR_SrcField
+            global master_Auto_ST_SrcField
+            global master_Auto_SA_SrcField
+            # global master_Auto_SentenceF_SrcField
+            # global master_Auto_SR_F_SrcField
+            # global master_Auto_ST_F_SrcField
+            global OVERWRITE_DST_FIELD
+            global slave_Model_Sentence_SPinyin_SMeaning_SAudio_List
             global master_deckName
+            global master_Auto_Synced_Hint_SrcField
+            global Enable_Optional_Custom_MasterSlaveSyncFieldList
+            global Master_to_Corresponding_Slave_Field_List
+            global master_Traditional_Field
+            global master_Freq_Field
+            global master_Pinyin_Field
+            global master_Pinyin2_Field
+            global master_meaning_Field
+            global master_CardCreate_Other1_field
+            global master_CardCreate_Other2_field
+            global master_other1_Field
+            global master_other2_Field
+            global master_other3_Field
             showInfo("Saving master_modelName & master_deckName: %s" % mode)
             master_deckName = self.dsel.currentText()
             master_modelName = self.kanjiNotebox.currentText()
+
+            master_Hanzi_SrcField = self.kanjiNewCardFieldbox[0].currentText()
+            master_Traditional_Field = self.kanjiNewCardFieldbox[1].currentText()
+            master_Freq_Field = self.kanjiNewCardFieldbox[2].currentText()
+            master_Pinyin_Field = self.kanjiNewCardFieldbox[3].currentText()
+            master_Pinyin2_Field = self.kanjiNewCardFieldbox[4].currentText()
+            master_meaning_Field = self.kanjiNewCardFieldbox[5].currentText()
+            master_CardCreate_Other1_field = self.kanjiNewCardFieldbox[6].currentText()
+            master_CardCreate_Other2_field = self.kanjiNewCardFieldbox[7].currentText()
+
+            master_Auto_Sentence_SrcField = self.kanjiFieldbox[0].currentText()
+            master_Auto_SR_SrcField = self.kanjiFieldbox[1].currentText()
+            master_Auto_ST_SrcField = self.kanjiFieldbox[2].currentText()
+            master_Auto_SA_SrcField = self.kanjiFieldbox[3].currentText()
+            master_Auto_Synced_Hint_SrcField = self.kanjiFieldbox[4].currentText()
+            master_other1_Field = self.kanjiFieldbox[5].currentText()
+            master_other2_Field = self.kanjiFieldbox[6].currentText()
+            master_other3_Field = self.kanjiFieldbox[7].currentText()
+
+            # let's just make a new slave_Model_Sentence_SPinyin_SMeaning_SAudio_List from the beginning and clone it instead
+
+            TempVocabFieldAndNote_NameList = [[None for zz in range(9)] for yy in range(10)]
+            # that's [10][9] 10 for 10 row, and 1 note field + 8 note field. note field at [x][0]. vocab at [x][1-8]
+            for y in range(0, 10):
+                for x in range(0, 8):
+                    #howInfo("TempVocabNameList[y][x + 1] y is %d  x is %d x+1 is %d" %(y,x,x+1))
+                    TempVocabFieldAndNote_NameList[y][x + 1] = self.vocabFieldBox_YX[y][x].currentText()
+
+            #showInfo(str(TempVocabFieldAndNote_NameList))
+
+            for i in list(reversed(range(0,10))):
+                # start in reversed order to avoid issue with popping out of range list
+                if self.vocabNoteBox[i].currentText():
+                    # if vocab model name not null, then save.
+                    TempVocabFieldAndNote_NameList[i][0] = self.vocabNoteBox[i].currentText()
+                else:
+                    # otherwise, delete the whole row for that model+vocab field
+                    TempVocabFieldAndNote_NameList.pop(i)
+
+            #showInfo(str(TempVocabFieldAndNote_NameList))
+
+            slave_Model_Sentence_SPinyin_SMeaning_SAudio_List = TempVocabFieldAndNote_NameList
+            """
+
+            for y in range(0, 10):
+                for x in range(0, 8):
+                    #to prevent list out of range. eg. mList = [1,2], mList[4] = 5 will produce error. use append instead
+                    if len(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List) - 1 >= y:
+                     if len(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[y]) - 2 >= x:
+                            slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[y][x + 1] = self.vocabFieldBox_YX[y][x].currentText()
+
+            # vocabFieldBox_YX[][] must be updated before vocabNoteBox because there's a pop function for vocabNoteBox
+            # would have been risky for list out of bound error otherwise
+
+            for i in range(0, 10):
+                if self.vocabNoteBox[i].currentText():
+                    # if vocab model name not null, then save.
+                    slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[i][0] = self.vocabNoteBox[i].currentText()
+                else:
+                    # otherwise, delete the whole row for that model+vocab field
+                    slave_Model_Sentence_SPinyin_SMeaning_SAudio_List.pop(i)
+            """
+
             save_config()
 
 def save_config():
@@ -245,9 +342,9 @@ def save_config():
     global master_Auto_SR_SrcField
     global master_Auto_ST_SrcField
     global master_Auto_SA_SrcField
-    #global master_Auto_SentenceF_SrcField
-    #global master_Auto_SR_F_SrcField
-    #global master_Auto_ST_F_SrcField
+    # global master_Auto_SentenceF_SrcField
+    # global master_Auto_SR_F_SrcField
+    # global master_Auto_ST_F_SrcField
     global OVERWRITE_DST_FIELD
     global slave_Model_Sentence_SPinyin_SMeaning_SAudio_List
     global master_deckName
@@ -261,15 +358,35 @@ def save_config():
     global master_meaning_Field
     global master_CardCreate_Other1_field
     global master_CardCreate_Other2_field
-    global Master_to_Corresponding_Slave_Field_List
-    #global master_other1_Field
-    #global master_other2_Field
-    #global master_other3_Field
+    global master_other1_Field
+    global master_other2_Field
+    global master_other3_Field
 
+    # unused are OVERWRITE_DST_FIELD and Master_to_Corresponding_Slave_Field_List
     config = mw.addonManager.getConfig(__name__)
     config['01_master_modelName'] = master_modelName
-    # config['02_master_Hanzi_SrcField'] = master_Hanzi_SrcField
     config['10_master_deckName'] = master_deckName
+
+    config['02_master_Hanzi_SrcField'] = master_Hanzi_SrcField
+    config['21_master_Traditional_Field'] = master_Traditional_Field
+    config['22_master_Freq_Field'] = master_Freq_Field
+    config['23_master_Pinyin_Field'] = master_Pinyin_Field
+    config['24_master_Pinyin2_Field'] = master_Pinyin2_Field
+    config['25_master_meaning_Field'] = master_meaning_Field
+    config['26_master_CardCreate_Other1_field'] = master_CardCreate_Other1_field
+    config['27_master_CardCreate_Other2_field'] = master_CardCreate_Other2_field
+
+    config['03_master_Auto_Sentence_SrcField'] = master_Auto_Sentence_SrcField
+    config['04_master_Auto_SR_SrcField'] = master_Auto_SR_SrcField
+    config['05_master_Auto_ST_SrcField'] = master_Auto_ST_SrcField
+    config['06_master_Auto_SA_SrcField'] = master_Auto_SA_SrcField
+    config['11_master_Auto_Synced_Hint_SrcField'] = master_Auto_Synced_Hint_SrcField
+    config['07_master_other1_Field'] = master_other1_Field
+    config['08_master_other2_Field'] = master_other2_Field
+    config['09_master_other3_Field'] = master_other3_Field
+
+    config['16_slave_Model_Sentence_SPinyin_SMeaning_SAudio_List'] = slave_Model_Sentence_SPinyin_SMeaning_SAudio_List
+
     mw.addonManager.writeConfig(__name__, config)
 
 
@@ -281,9 +398,9 @@ def reload_config():
     global master_Auto_SR_SrcField
     global master_Auto_ST_SrcField
     global master_Auto_SA_SrcField
-    #global master_Auto_SentenceF_SrcField
-    #global master_Auto_SR_F_SrcField
-    #global master_Auto_ST_F_SrcField
+    # global master_Auto_SentenceF_SrcField
+    # global master_Auto_SR_F_SrcField
+    # global master_Auto_ST_F_SrcField
     global OVERWRITE_DST_FIELD
     global slave_Model_Sentence_SPinyin_SMeaning_SAudio_List
     global master_deckName
@@ -297,10 +414,9 @@ def reload_config():
     global master_meaning_Field
     global master_CardCreate_Other1_field
     global master_CardCreate_Other2_field
-    global Master_to_Corresponding_Slave_Field_List
-    #global master_other1_Field
-    #global master_other2_Field
-    #global master_other3_Field
+    global master_other1_Field
+    global master_other2_Field
+    global master_other3_Field
 
     config = mw.addonManager.getConfig(__name__)
     master_modelName = config['01_master_modelName']
@@ -318,6 +434,18 @@ def reload_config():
     slave_Model_Sentence_SPinyin_SMeaning_SAudio_List = config['16_slave_Model_Sentence_SPinyin_SMeaning_SAudio_List']
     Enable_Optional_Custom_MasterSlaveSyncFieldList = config['13_Enable_Optional_Custom_MasterSlaveSyncFieldList']
     Master_to_Corresponding_Slave_Field_List = config['17_Master_to_Corresponding_Slave_Field_List']
+
+    master_Traditional_Field = config['21_master_Traditional_Field']
+    master_Freq_Field = config['22_master_Freq_Field']
+    master_Pinyin_Field = config['23_master_Pinyin_Field']
+    master_Pinyin2_Field = config['24_master_Pinyin2_Field']
+    master_meaning_Field = config['25_master_meaning_Field']
+    master_CardCreate_Other1_field = config['26_master_CardCreate_Other1_field']
+    master_CardCreate_Other2_field = config['27_master_CardCreate_Other2_field']
+
+    master_other1_Field = config['07_master_other1_Field']
+    master_other2_Field = config['08_master_other2_Field']
+    master_other3_Field = config['09_master_other3_Field']
 
 
 
