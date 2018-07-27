@@ -100,6 +100,7 @@ class HanziIndexDialog(QDialog):
         save_button = QPushButton("Save Config")
         save_button.clicked.connect(lambda state, x="save": self.onConfirm(x))
         run_button = QPushButton("Run")
+        run_button.clicked.connect(lambda state, x="run": self.onConfirm(x))
         cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.close)
         grid.addWidget(QLabel(" "), 16, 0)
@@ -240,8 +241,8 @@ class HanziIndexDialog(QDialog):
         # self.close()
 
     def onConfirm(self, mode):
-        """Current save limitation is on the kanji(master) card creation field. The variable name is hard wired"""
-        if mode == "save":
+            """Current save limitation is on the kanji(master) card creation field. The variable name is hard wired"""
+
             global master_modelName
             global master_Hanzi_SrcField
             global master_Auto_Sentence_SrcField
@@ -334,6 +335,10 @@ class HanziIndexDialog(QDialog):
             """
 
             save_config()
+
+            if mode == "run":
+                BulkGenerateLearned_Hanzi_Cross_Indexing(self.browser.selectedNotes())
+
 
 def save_config():
     global master_modelName
@@ -528,11 +533,23 @@ def get_Correct_Slave_Schema_List_For_Current_Note(note):
     #   ["Note","Auto_Synced_Hint",true],
     #   ["Auto_SawSentenceExample","Key"]
     # ]
+    """
+    #old version, the new version should be able to auto generate schema on its own.
     result = []
     for k in Master_to_Corresponding_Slave_Field_List:
         if k[0] in note.model()['name']:
             result = k
     return result
+
+    """
+    result = []
+    for k in slave_Model_Sentence_SPinyin_SMeaning_SAudio_List:
+        if k[0] in note.model()['name']:
+            result = k
+            #not finished
+    return result
+
+
 
 
 def Generate_Slave_Hanzi_Index(nids):
@@ -551,6 +568,10 @@ def Generate_Slave_Hanzi_Index(nids):
     info_Slave_Hanzi_indexed = 0
     info_Slave_Hanzi_not_in_Hanzi_Frequency_List = 0
     HanziOfHanziFreqList = [hanzi[1] for hanzi in HanziFreqList]
+    # HanziFreqList Example [x][0]= 21, [x][1] = 地, [x][2] =地(traditional), [x][3] 20.22369169, [x][4]= de,
+    # [x][5] = dì [x][6] = earth / ground / field / place / land
+    # [x][7] =  969349
+    # HanziOfHanziFreqList = HanziFreqList[x][1] = 地, i.e. just hanzi list to be searched against
     for nid in nids:
         # showInfo ("Found note: %s" % (nid))
         note = mw.col.getNote(nid)
