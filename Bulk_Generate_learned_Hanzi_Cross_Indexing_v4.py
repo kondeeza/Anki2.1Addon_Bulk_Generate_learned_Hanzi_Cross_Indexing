@@ -45,14 +45,13 @@ master_Auto_SA_SrcField = ''
 master_Auto_Synced_Hint_SrcField = ''
 master_deckName = ''
 Enable_Optional_Custom_MasterSlaveSyncFieldList = ''
-master_Traditional_Field = 'Traditional'
-master_Freq_Field = 'FrequencyRank'
-master_Pinyin_Field = 'Pinyin'
-master_Pinyin2_Field = 'Pinyin 2'
-master_meaning_Field = 'Meaning'
-master_CardCreate_Other1_field = 'Meaning'
-master_CardCreate_Other2_field = 'Meaning'
-Master_to_Corresponding_Slave_Field_List = ''
+master_Traditional_Field = ''
+master_Freq_Field = ''
+master_Pinyin_Field = ''
+master_Pinyin2_Field = ''
+master_meaning_Field = ''
+master_CardCreate_Other1_field = ''
+master_CardCreate_Other2_field = ''
 master_other1_Field = ''
 master_other2_Field = ''
 master_other3_Field = ''
@@ -257,7 +256,6 @@ class HanziIndexDialog(QDialog):
             global master_deckName
             global master_Auto_Synced_Hint_SrcField
             global Enable_Optional_Custom_MasterSlaveSyncFieldList
-            global Master_to_Corresponding_Slave_Field_List
             global master_Traditional_Field
             global master_Freq_Field
             global master_Pinyin_Field
@@ -355,7 +353,6 @@ def save_config():
     global master_deckName
     global master_Auto_Synced_Hint_SrcField
     global Enable_Optional_Custom_MasterSlaveSyncFieldList
-    global Master_to_Corresponding_Slave_Field_List
     global master_Traditional_Field
     global master_Freq_Field
     global master_Pinyin_Field
@@ -367,7 +364,7 @@ def save_config():
     global master_other2_Field
     global master_other3_Field
 
-    # unused are OVERWRITE_DST_FIELD and Master_to_Corresponding_Slave_Field_List
+    # unused are OVERWRITE_DST_FIELD
     config = mw.addonManager.getConfig(__name__)
     config['01_master_modelName'] = master_modelName
     config['10_master_deckName'] = master_deckName
@@ -411,7 +408,6 @@ def reload_config():
     global master_deckName
     global master_Auto_Synced_Hint_SrcField
     global Enable_Optional_Custom_MasterSlaveSyncFieldList
-    global Master_to_Corresponding_Slave_Field_List
     global master_Traditional_Field
     global master_Freq_Field
     global master_Pinyin_Field
@@ -438,7 +434,6 @@ def reload_config():
     master_Auto_Synced_Hint_SrcField = config['11_master_Auto_Synced_Hint_SrcField']
     slave_Model_Sentence_SPinyin_SMeaning_SAudio_List = config['16_slave_Model_Sentence_SPinyin_SMeaning_SAudio_List']
     Enable_Optional_Custom_MasterSlaveSyncFieldList = config['13_Enable_Optional_Custom_MasterSlaveSyncFieldList']
-    Master_to_Corresponding_Slave_Field_List = config['17_Master_to_Corresponding_Slave_Field_List']
 
     master_Traditional_Field = config['21_master_Traditional_Field']
     master_Freq_Field = config['22_master_Freq_Field']
@@ -478,10 +473,11 @@ def createAnkiNote(hanziToAddNoteList, masterNoteModelFile):
     for hanziNote in hanziToAddNoteList:
         showInfo("Found note: %s" % (str(hanziNote)))
         # note = mw.col.getNote(nid)
-        model = masterNoteModelFile
+        model = mw.col.models.byName(master_modelName)
 
         # Assign model to deck
         mw.col.decks.select(deck['id'])
+        #showInfo("Model file is %s " %str(model))
         mw.col.decks.get(deck)['mid'] = model['id']
         mw.col.decks.save(deck)
 
@@ -525,7 +521,7 @@ def createAnkiNote(hanziToAddNoteList, masterNoteModelFile):
 
 def get_Correct_Slave_Schema_List_For_Current_Note(note):
     # this will return the correct slave schema for current note input.
-    # result would be from one of the list inside 17_Master_to_Corresponding_Slave_Field_List
+    # result would be from one of the list inside slave_Model_Sentence_SPinyin_SMeaning_SAudio_List
     # for example, result could be
     #  [
     #    "HSK",
@@ -585,6 +581,7 @@ def Generate_Slave_Hanzi_Index(nids):
         # showInfo ("Found note: %s" % (nid))
         note = mw.col.getNote(nid)
         cSlaveSchema = get_Correct_Slave_Schema_List_For_Current_Note(note)
+        #showInfo("cSlaveSchema is %s " %str(cSlaveSchema))
         if not cSlaveSchema:
             # showInfo ("no Model matched")
             warning_counter += 1
@@ -596,6 +593,7 @@ def Generate_Slave_Hanzi_Index(nids):
         # cSlaveSchema[1] will always be slave sentence schema e.g. "Vocab Sentence Field"
         if cSlaveSchema[1] in note:
             slave_sentence_FieldName = cSlaveSchema[1]
+            #showInfo("slave_sentence_FieldName is %s " % str(slave_sentence_FieldName))
         if not slave_sentence_FieldName:
             # no slave_sentence_FieldName field
             # showInfo ("--> Field %s not found." % (slave_Sentence_SrcField))
@@ -617,10 +615,12 @@ def Generate_Slave_Hanzi_Index(nids):
                     for i in cSlaveSchema:
                         if currentloopCount != 0:
                             if isinstance(i, str):
-                                # previously used cSlave_ToIndex_Note.append(note[i])
-                                # but changed to note.get to catch the None type. i.e cSlave_ToIndex_Note.append(note.get(""))
+                                # condition to catch the None type. i.e cSlave_ToIndex_Note.append(note.get(""))
                                 # because using cSlave_ToIndex_Note.append(note[""]) will return error
-                                cSlave_ToIndex_Note.append(note.get(i))
+                                if i is not None and i != "":
+                                    cSlave_ToIndex_Note.append(note[i])
+                                else:
+                                    cSlave_ToIndex_Note.append("")
                             elif isinstance(i, list):
                                 # this should be obsolete now since schema will now always be string
                                 cSlave_ToIndex_Note.append([i[0], note[i[1]]])
@@ -633,6 +633,7 @@ def Generate_Slave_Hanzi_Index(nids):
                         info_Slave_Hanzi_indexed += 1
                 else:
                     info_Slave_Hanzi_not_in_Hanzi_Frequency_List += 1
+                    #showInfo("Slave_Hanzi_not_in_Hanzi_Frequency_List, note[slave_sentence_FieldName] is %s , x is %s" %(str(note[slave_sentence_FieldName]), str(x)))
                     # showInfo (str(Slave_Hanzi_Dict[x]))
                     # TextOutput = note[src1]
                     # note[dst]= str(TotalWordCount)
@@ -671,7 +672,7 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
 
     # showInfo ("Beginning BulkGenerateLearned_Hanzi_Cross_Indexing with this config:\n master_modelName: %s \n master_Hanzi_SrcField: %s \n master_Auto_Sentence_SrcField: %s \n master_Auto_SR_SrcField: %s \n master_Auto_ST_SrcField: %s \n master_Auto_SA_SrcField: %s \n master_Auto_SentenceF_SrcField: %s \n master_Auto_SR_F_SrcField: %s \n master_Auto_ST_F_SrcField: %s \n OVERWRITE_DST_FIELD: %s \n slave_Model_Sentence_SPinyin_SMeaning_SAudio_List: %s " %(master_modelName,master_Hanzi_SrcField,master_Auto_Sentence_SrcField,master_Auto_SR_SrcField,master_Auto_ST_SrcField,master_Auto_SA_SrcField,master_Auto_SentenceF_SrcField,master_Auto_SR_F_SrcField,master_Auto_ST_F_SrcField,OVERWRITE_DST_FIELD, str(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List) ))
     showInfo(
-        "Begins BulkGenerateLearned_Hanzi_Cross_Indexing with this config:\n master_modelName: %s \n master_Hanzi_SrcField: %s \n Master_to_Corresponding_Slave_Field_List %s \n OVERWRITE_DST_FIELD: %s" % (
+        "Begins BulkGenerateLearned_Hanzi_Cross_Indexing with this config:\n master_modelName: %s \n master_Hanzi_SrcField: %s \n slave_Model_Sentence_SPinyin_SMeaning_SAudio_List %s \n OVERWRITE_DST_FIELD: %s" % (
         master_modelName, master_Hanzi_SrcField, str(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List),
         OVERWRITE_DST_FIELD))
     validateFieldList(nids)
@@ -706,15 +707,16 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
         # showInfo(str(note._model))
         if not masterNoteModelFile:
             masterNoteModelFile = note._model
+            #showInfo(str(note._model))
         if master_Hanzi_SrcField in note:
-            # showInfo ("No issue with master_Hanzi_SrcField")
+            #showInfo ("No issue with master_Hanzi_SrcField")
             print("No issue with master_Hanzi_SrcField")
         else:
             # no master_Hanzi_SrcField field
             # showInfo ("--> Field %s not found." % (master_Hanzi_SrcField))
             continue
         if master_Auto_Sentence_SrcField in note:
-            # showInfo ("--> Field %s is found!" % (master_Auto_Sentence_SrcField))
+            #showInfo ("--> Field %s is found!" % (master_Auto_Sentence_SrcField))
             print("--> Field %s is found!" % (master_Auto_Sentence_SrcField))
         else:
             # showInfo ("--> Field %s not found!" % (master_Auto_Sentence_SrcField))
@@ -726,6 +728,7 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
             continue
         try:
             a = Slave_Hanzi_Dict.get(note[master_Hanzi_SrcField])
+            #showInfo("a is : %s" %str(a))
             # Search if the hanzi field from master card has match in  slave hanzi dict
             # Sample,  a = Slave_Hanzi_Dict.get('我')
             if not a:
