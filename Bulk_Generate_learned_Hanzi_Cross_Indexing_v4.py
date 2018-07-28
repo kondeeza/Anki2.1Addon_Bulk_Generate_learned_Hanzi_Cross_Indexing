@@ -111,8 +111,6 @@ class HanziIndexDialog(QDialog):
         self.dsel = QComboBox()
         decks = self._getDeckLists()
         self.dsel.addItems([master_deckName] + decks)
-        #showInfo(master_deckName)
-        #self.dsel.setItemText(3, "aaaaaaa")
         grid.addWidget(self.dsel, 1, 0)
 
 
@@ -212,12 +210,7 @@ class HanziIndexDialog(QDialog):
 
     def onQBoxUpdate(self, mode):
             # if mode == "QComboBox_Note_Updated":
-            showInfo("Box updated, mode is %s" % mode)
-            """
-            self.fsel.clear()
-            fields = self._getFieldsFromNoteType(self.nsel.currentText())
-            self.fsel.addItems(fields)
-            """
+            #showInfo("Box updated, mode is %s" % mode)
 
             if mode == "QComboBox_Note_Updated_KJ":
                 for i in range(0, 8):
@@ -237,7 +230,6 @@ class HanziIndexDialog(QDialog):
                         fields = self._getFieldsFromNoteType(self.vocabNoteBox[y].currentText())
                         self.vocabFieldBox_YX[y][x].addItems(fields)
 
-        # self.close()
 
     def onConfirm(self, mode):
             """Current save limitation is on the kanji(master) card creation field. The variable name is hard wired"""
@@ -309,29 +301,7 @@ class HanziIndexDialog(QDialog):
                     TempVocabFieldAndNote_NameList.pop(i)
 
             #showInfo(str(TempVocabFieldAndNote_NameList))
-
             slave_Model_Sentence_SPinyin_SMeaning_SAudio_List = TempVocabFieldAndNote_NameList
-            """
-
-            for y in range(0, 10):
-                for x in range(0, 8):
-                    #to prevent list out of range. eg. mList = [1,2], mList[4] = 5 will produce error. use append instead
-                    if len(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List) - 1 >= y:
-                     if len(slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[y]) - 2 >= x:
-                            slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[y][x + 1] = self.vocabFieldBox_YX[y][x].currentText()
-
-            # vocabFieldBox_YX[][] must be updated before vocabNoteBox because there's a pop function for vocabNoteBox
-            # would have been risky for list out of bound error otherwise
-
-            for i in range(0, 10):
-                if self.vocabNoteBox[i].currentText():
-                    # if vocab model name not null, then save.
-                    slave_Model_Sentence_SPinyin_SMeaning_SAudio_List[i][0] = self.vocabNoteBox[i].currentText()
-                else:
-                    # otherwise, delete the whole row for that model+vocab field
-                    slave_Model_Sentence_SPinyin_SMeaning_SAudio_List.pop(i)
-            """
-
             save_config()
 
             if mode == "run":
@@ -456,7 +426,7 @@ def validateFieldList(nids):
     return True
 
 
-def createAnkiNote(hanziToAddNoteList, masterNoteModelFile):
+def createAnkiNote(hanziToAddNoteList):
     mw.checkpoint("Manual Create Note")
     mw.progress.start()
 
@@ -491,16 +461,33 @@ def createAnkiNote(hanziToAddNoteList, masterNoteModelFile):
         # note_toAdd.tags = note.tags
         # note_toAdd.fields = note.fields
         note_toAdd[master_Hanzi_SrcField] = hanziNote[1]
-        note_toAdd[master_Traditional_Field] = hanziNote[2]
-        note_toAdd[master_Freq_Field] = str(hanziNote[0])
-        note_toAdd[master_Pinyin_Field] = hanziNote[4]
-        note_toAdd[master_Pinyin2_Field] = hanziNote[5]
-        note_toAdd[master_meaning_Field] = hanziNote[6]
-        note_toAdd[master_Auto_Sentence_SrcField] = hanziNote[8][0]
-        note_toAdd[master_Auto_SR_SrcField] = hanziNote[8][1]
-        note_toAdd[master_Auto_ST_SrcField] = hanziNote[8][2]
-        note_toAdd[master_Auto_SA_SrcField] = hanziNote[8][3]
-        note_toAdd[master_Auto_Synced_Hint_SrcField] = hanziNote[8][4]
+        if master_Traditional_Field:
+            note_toAdd[master_Traditional_Field] = hanziNote[2]
+        if master_Freq_Field:
+            note_toAdd[master_Freq_Field] = str(hanziNote[0])
+        if master_Pinyin_Field:
+            note_toAdd[master_Pinyin_Field] = hanziNote[4]
+        if master_Pinyin2_Field:
+            note_toAdd[master_Pinyin2_Field] = hanziNote[5]
+        if master_meaning_Field:
+            note_toAdd[master_meaning_Field] = hanziNote[6]
+
+        if hanziNote[8][0]:
+            note_toAdd[master_Auto_Sentence_SrcField] = hanziNote[8][0]
+        if hanziNote[8][1] and master_Auto_SR_SrcField:
+            note_toAdd[master_Auto_SR_SrcField] = hanziNote[8][1]
+        if hanziNote[8][2] and master_Auto_ST_SrcField:
+            note_toAdd[master_Auto_ST_SrcField] = hanziNote[8][2]
+        if hanziNote[8][3] and master_Auto_SA_SrcField:
+            note_toAdd[master_Auto_SA_SrcField] = hanziNote[8][3]
+        if hanziNote[8][4] and master_Auto_Synced_Hint_SrcField:
+            note_toAdd[master_Auto_Synced_Hint_SrcField] = hanziNote[8][4]
+        if hanziNote[8][5] and master_other1_Field:
+            note_toAdd[master_other1_Field] = hanziNote[8][5]
+        if hanziNote[8][6] and master_other2_Field:
+            note_toAdd[master_other2_Field] = hanziNote[8][6]
+        if hanziNote[8][7] and master_other3_Field:
+            note_toAdd[master_other3_Field] = hanziNote[8][7]
 
         """
         if len(hanziNote[8]) >= 6 and Enable_Optional_Custom_MasterSlaveSyncFieldList == True:
@@ -532,17 +519,6 @@ def get_Correct_Slave_Schema_List_For_Current_Note(note):
     #    "Note",
     #    "Key"
     #  ]
-    """
-        result = []
-        for k in slave_Model_Sentence_SPinyin_SMeaning_SAudio_List:
-            if k[0] in note.model()['name']:
-                result = k
-        return result
-
-    """
-    Master_Note_Field_Name_L = []
-    Master_Deck_NewCard_Field_Name_L = []
-    Slave_Note_Field_Name_L = []
     result = []
     for k in slave_Model_Sentence_SPinyin_SMeaning_SAudio_List:
         if k[0] in note.model()['name']:
@@ -614,16 +590,14 @@ def Generate_Slave_Hanzi_Index(nids):
                     currentloopCount = 0
                     for i in cSlaveSchema:
                         if currentloopCount != 0:
-                            if isinstance(i, str):
+                                #if isinstance(i, str):
                                 # condition to catch the None type. i.e cSlave_ToIndex_Note.append(note.get(""))
                                 # because using cSlave_ToIndex_Note.append(note[""]) will return error
                                 if i is not None and i != "":
                                     cSlave_ToIndex_Note.append(note[i])
                                 else:
                                     cSlave_ToIndex_Note.append("")
-                            elif isinstance(i, list):
-                                # this should be obsolete now since schema will now always be string
-                                cSlave_ToIndex_Note.append([i[0], note[i[1]]])
+
                         currentloopCount += 1
                     if x not in Slave_Hanzi_Dict:
                         Slave_Hanzi_Dict[x] = [cSlave_ToIndex_Note]
@@ -687,7 +661,6 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
     info_Distinct_Hanzi_In_Slave_Deck = len(Slave_Hanzi_Dict)
     info_Hanzi_In_Master_Card_but_Not_in_Slave = 0
     info_Total_Changes_Made_To_Master_Card = 0
-    masterNoteModelFile = ''
     showInfo("--> Now on final part. Binding final output to dst !")
     ########################################
     # for Sla_H in Slave_Hanzi_Dict
@@ -705,9 +678,6 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
             continue
         # showInfo(str(note.model()))
         # showInfo(str(note._model))
-        if not masterNoteModelFile:
-            masterNoteModelFile = note._model
-            #showInfo(str(note._model))
         if master_Hanzi_SrcField in note:
             #showInfo ("No issue with master_Hanzi_SrcField")
             print("No issue with master_Hanzi_SrcField")
@@ -796,7 +766,7 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
     showInfo("note to add = %s " % str(SlaveNoteToAdd))
     # dummyNoteToAdd = [[6352,"糗","",99.98774599,"qiǔ","","(surname)/dryprovisions",36],[6353,"鸮","鴞",99.9877646,
     # "xiāo","","",36],[6354,"蕰","",99.9877832,"wēn","","",36],[6355,"坼","",99.9878018,"chè","","tocrack/split/break/tochap",36]]
-    createAnkiNote(SlaveNoteToAdd, masterNoteModelFile)
+    createAnkiNote(SlaveNoteToAdd)
     mw.progress.finish()
     mw.reset()
 
