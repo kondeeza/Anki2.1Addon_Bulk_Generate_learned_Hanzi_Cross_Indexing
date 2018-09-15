@@ -24,6 +24,10 @@ def getKanjiDefinition_v2(kanjiInput):
     KanjiDef_heisig = ''
     KanjiDef_meaning = ''
     KanjiDef_Pinyin = ''
+    KanjiDef_Korean_reading1 = ''
+    KanjiDef_Korean_hangul1 = ''
+    KanjiDef_Korean_reading_Full = ''
+    KanjiDef_Korean_hangul_Full = ''
     KanjiDef_Reading_On = ''
     KanjiDef_Reading_Kun = ''
 
@@ -68,6 +72,20 @@ def getKanjiDefinition_v2(kanjiInput):
                         KanjiDef_Reading_On = KanjiDef_Reading_On + readingList.get('#text') + ', '
                     elif readingList.get('-r_type') == 'ja_kun':
                         KanjiDef_Reading_Kun = KanjiDef_Reading_Kun + readingList.get('#text') + ', '
+                    elif readingList.get('-r_type') == 'korean_r':
+                        KanjiDef_Korean_reading_Full = KanjiDef_Korean_reading_Full + readingList.get('#text') + ', '
+                        if not KanjiDef_Korean_reading1:
+                            KanjiDef_Korean_reading1 = readingList.get('#text')
+                    elif readingList.get('-r_type') == 'korean_h':
+                        KanjiDef_Korean_hangul_Full = KanjiDef_Korean_hangul_Full + readingList.get('#text') + ', '
+                        if not KanjiDef_Korean_hangul1:
+                            KanjiDef_Korean_hangul1 = readingList.get('#text')
+
+    #remove the unneeded extra ", " at the end of variable
+    if KanjiDef_Korean_reading_Full:
+        KanjiDef_Korean_reading_Full = KanjiDef_Korean_reading_Full[:-2]
+    if KanjiDef_Korean_hangul_Full:
+        KanjiDef_Korean_hangul_Full = KanjiDef_Korean_hangul_Full[:-2]
 
     KanjiResultDict["character"] = KanjiDefition_character
     KanjiResultDict["stroke_count"] = KanjiDef_stroke_count
@@ -80,6 +98,10 @@ def getKanjiDefinition_v2(kanjiInput):
     KanjiResultDict["Pinyin"] = KanjiDef_Pinyin
     KanjiResultDict["Reading_On"] = KanjiDef_Reading_On
     KanjiResultDict["Reading_Kun"] = KanjiDef_Reading_Kun
+    KanjiResultDict["Korean_reading1"] = KanjiDef_Korean_reading1
+    KanjiResultDict["Korean_hangul1"] = KanjiDef_Korean_hangul1
+    KanjiResultDict["Korean_reading_Full"] = KanjiDef_Korean_reading_Full
+    KanjiResultDict["Korean_hangul_Full"] = KanjiDef_Korean_hangul_Full
 
     if not KanjiResultDict["character"]:
         KanjiResultDict = ''
@@ -96,7 +118,7 @@ def getKanjiDefinition_v2(kanjiInput):
 #print(len(data["kanjidic2"]["character"]))
 
 
-print (KanjiDict.get('擧'))
+print (KanjiDict.get('女'))
 test_result = getKanjiDefinition_v2('女')
 print (test_result)
 print ("")

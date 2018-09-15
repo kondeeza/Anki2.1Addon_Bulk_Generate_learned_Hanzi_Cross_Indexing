@@ -89,7 +89,7 @@ class HanziIndexDialog(QDialog):
         grid = QGridLayout()
         self.setLayout(grid)
 
-        names = ['Kanji Deck Name', 'Kanji Field', 'Kanji Stroke Count', 'JLPT','Reading On Yomi','Reading Kun Yomi','Kanji Meaning','Heisig No','Frequency',
+        names = ['Hanja Deck Name', 'Hanja Field', 'Meaning_E', 'Reading_E','Reading_K','Reading_K_FullList','On_Yomi','Kun_Yomi','Pinyin',
                  ' ', '', '', '', '', '', '', '', '',
                  'Kanji Notetype','KanjiDeck Auto_Sentence', 'KanjiDeck Auto_Sentence Reading', 'KanjiDeck Auto_Sentence Translation', 'KanjiDeck Auto_Sentence Audio', 'KanjiDeck Auto_Hint', 'Others_1','Others_2','Others_3',
                  '', '', '', '', '', '', '', '', '',
@@ -476,19 +476,19 @@ def createAnkiNote(hanziToAddNoteList):
 
         note_toAdd[master_Hanzi_SrcField] = hanziNote[0]["character"]
         if master_Traditional_Field:
-            note_toAdd[master_Traditional_Field] = str(hanziNote[0]["stroke_count"])
+            note_toAdd[master_Traditional_Field] = str(hanziNote[0]["meaning"])
         if master_Freq_Field:
-            note_toAdd[master_Freq_Field] = str(hanziNote[0]["jlpt"])
+            note_toAdd[master_Freq_Field] = str(hanziNote[0]["Korean_reading1"])
         if master_Pinyin_Field:
-            note_toAdd[master_Pinyin_Field] = hanziNote[0]["Reading_On"]
+            note_toAdd[master_Pinyin_Field] = str(hanziNote[0]["Korean_hangul1"])
         if master_Pinyin2_Field:
-            note_toAdd[master_Pinyin2_Field] = hanziNote[0]["Reading_Kun"]
+            note_toAdd[master_Pinyin2_Field] = str(hanziNote[0]["Korean_hangul_Full"])
         if master_meaning_Field:
-            note_toAdd[master_meaning_Field] = str(hanziNote[0]["meaning"])
+            note_toAdd[master_meaning_Field] = str(hanziNote[0]["Reading_On"])
         if master_CardCreate_Other1_field:
-            note_toAdd[master_CardCreate_Other1_field] = str(hanziNote[0]["heisig"])
+            note_toAdd[master_CardCreate_Other1_field] = str(hanziNote[0]["Reading_Kun"])
         if master_CardCreate_Other2_field:
-            note_toAdd[master_CardCreate_Other2_field] = str(hanziNote[0]["freq"])
+            note_toAdd[master_CardCreate_Other2_field] = str(hanziNote[0]["Pinyin"])
 
         if hanziNote[1][0]:
             note_toAdd[master_Auto_Sentence_SrcField] = hanziNote[1][0]
@@ -559,6 +559,10 @@ def getKanjiDefinition_v2(kanjiInput):
     KanjiDef_heisig = ''
     KanjiDef_meaning = ''
     KanjiDef_Pinyin = ''
+    KanjiDef_Korean_reading1 = ''
+    KanjiDef_Korean_hangul1 = ''
+    KanjiDef_Korean_reading_Full = ''
+    KanjiDef_Korean_hangul_Full = ''
     KanjiDef_Reading_On = ''
     KanjiDef_Reading_Kun = ''
 
@@ -603,6 +607,20 @@ def getKanjiDefinition_v2(kanjiInput):
                         KanjiDef_Reading_On = KanjiDef_Reading_On + readingList.get('#text') + ', '
                     elif readingList.get('-r_type') == 'ja_kun':
                         KanjiDef_Reading_Kun = KanjiDef_Reading_Kun + readingList.get('#text') + ', '
+                    elif readingList.get('-r_type') == 'korean_r':
+                        KanjiDef_Korean_reading_Full = KanjiDef_Korean_reading_Full + readingList.get('#text') + ', '
+                        if not KanjiDef_Korean_reading1:
+                            KanjiDef_Korean_reading1 = readingList.get('#text')
+                    elif readingList.get('-r_type') == 'korean_h':
+                        KanjiDef_Korean_hangul_Full = KanjiDef_Korean_hangul_Full + readingList.get('#text') + ', '
+                        if not KanjiDef_Korean_hangul1:
+                            KanjiDef_Korean_hangul1 = readingList.get('#text')
+
+    #remove the unneeded extra ", " at the end of variable
+    if KanjiDef_Korean_reading_Full:
+        KanjiDef_Korean_reading_Full = KanjiDef_Korean_reading_Full[:-2]
+    if KanjiDef_Korean_hangul_Full:
+        KanjiDef_Korean_hangul_Full = KanjiDef_Korean_hangul_Full[:-2]
 
     KanjiResultDict["character"] = KanjiDefition_character
     KanjiResultDict["stroke_count"] = KanjiDef_stroke_count
@@ -615,6 +633,10 @@ def getKanjiDefinition_v2(kanjiInput):
     KanjiResultDict["Pinyin"] = KanjiDef_Pinyin
     KanjiResultDict["Reading_On"] = KanjiDef_Reading_On
     KanjiResultDict["Reading_Kun"] = KanjiDef_Reading_Kun
+    KanjiResultDict["Korean_reading1"] = KanjiDef_Korean_reading1
+    KanjiResultDict["Korean_hangul1"] = KanjiDef_Korean_hangul1
+    KanjiResultDict["Korean_reading_Full"] = KanjiDef_Korean_reading_Full
+    KanjiResultDict["Korean_hangul_Full"] = KanjiDef_Korean_hangul_Full
 
     if not KanjiResultDict["character"]:
         KanjiResultDict = ''
