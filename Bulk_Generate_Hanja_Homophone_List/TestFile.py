@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from hangul_jamo import is_syllable, is_jamo_character, compose_jamo_characters, decompose_syllable, compose, decompose
+# doing  from  .hangul_jamo import will give error because relative import works on __main__ basis and it wouldn't be able to find __main__.hangul_jamo
+from  hangul_jamo import is_syllable, is_jamo_character, compose_jamo_characters, decompose_syllable, compose, decompose
 
 
 
@@ -81,3 +82,9 @@ if result == []:
     result.append(input)
 
 print(result)
+
+
+print("Hello")
+
+print("__name__ value: ", __name__)
+

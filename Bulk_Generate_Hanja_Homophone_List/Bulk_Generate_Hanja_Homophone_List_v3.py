@@ -37,7 +37,9 @@ import sys
 #reload(sys) #apparently this doesn't work in python3... 
 #sys.setdefaultencoding('utf-8')
 ########################################################################## THIS SOLVES THE ANNOYING UNICODE ISSUE !!
-from hangul_jamo import is_syllable, is_jamo_character, compose_jamo_characters, decompose_syllable, compose, decompose
+
+# added dot for importing relative module package.
+from .hangul_jamo import is_syllable, is_jamo_character, compose_jamo_characters, decompose_syllable, compose, decompose
 
 
 modelName = ''
@@ -338,6 +340,7 @@ def setupMenu(browser):
     menu.addSeparator()
     a = menu.addAction('Bulk-Generate Hanja Homophone List')
     a.triggered.connect(lambda _, b=browser: onBulkGenerateHanjaHomophoneList(b))
+
 
 def onBulkGenerateHanjaHomophoneList(browser):
     BulkGenerateHanjaHomophoneList(browser.selectedNotes())
