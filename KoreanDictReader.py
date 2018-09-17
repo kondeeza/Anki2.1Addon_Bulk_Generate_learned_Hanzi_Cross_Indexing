@@ -125,7 +125,7 @@ print ("")
 test_result = getKanjiDefinition_v2('邂')
 print (test_result)
 print ("")
-print (KanjiDict.get('邂'))
+print (KanjiDict.get('强'))
 
 
 

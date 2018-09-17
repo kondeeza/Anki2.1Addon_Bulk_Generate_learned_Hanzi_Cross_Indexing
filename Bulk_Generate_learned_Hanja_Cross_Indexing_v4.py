@@ -24,7 +24,7 @@ from aqt import mw
 from aqt.utils import showWarning, showInfo, tooltip
 import re
 import platform
-import re
+import time
 import os
 import json
 ########################################################################## THIS SOLVES THE ANNOYING UNICODE ISSUE
@@ -107,7 +107,6 @@ class HanziIndexDialog(QDialog):
             label = QLabel(name)
             #showInfo("adding grid widget, button = %s , and position =  %s" % (name, str(position)))
             grid.addWidget(label, *position)
-
         save_button = QPushButton("Save Config")
         save_button.clicked.connect(lambda state, x="save": self.onConfirm(x))
         run_button = QPushButton("Run")
@@ -273,7 +272,6 @@ class HanziIndexDialog(QDialog):
             showInfo("Saving master_modelName & master_deckName: %s" % mode)
             master_deckName = self.dsel.currentText()
             master_modelName = self.kanjiNotebox.currentText()
-
             master_Hanzi_SrcField = self.kanjiNewCardFieldbox[0].currentText()
             master_Traditional_Field = self.kanjiNewCardFieldbox[1].currentText()
             master_Freq_Field = self.kanjiNewCardFieldbox[2].currentText()
@@ -442,6 +440,7 @@ def createAnkiNote(hanziToAddNoteList):
     mw.checkpoint("Manual Create Note")
     mw.progress.start()
 
+    tooltip("Card creation is slow. It would take about 15 seconds per 100 cards creation")
     # Get desired deck name from input box
     deckName = master_deckName
     if not deckName:
@@ -450,10 +449,21 @@ def createAnkiNote(hanziToAddNoteList):
 
     # Create new deck with name from input box
     deck = mw.col.decks.get(mw.col.decks.id(deckName))
-    tooltip("Kanji Deck Info is: %s" %str(deck))
+    #tooltip("Kanji Deck Info is: %s" %str(deck))
     # Copy notes
+    showinfocounter = 0
     for hanziNote in hanziToAddNoteList:
-        showInfo("Found note: %s" % (str(hanziNote)))
+        if showinfocounter <=10:
+            showInfo("Found note: %s" % (str(hanziNote)))
+
+        if showinfocounter%100==0:
+            # period means to only show for x /1000 second. i.e. 1000 = 1 sec. though it doesn't seem to work
+            tooltip("card created counter is : %s" % (str(showinfocounter)), period=1000)
+            # refresh GUI during loop
+            mw.app.processEvents()
+
+
+        showinfocounter = showinfocounter + 1
         # note = mw.col.getNote(nid)
         model = mw.col.models.byName(master_modelName)
 
@@ -517,6 +527,7 @@ def createAnkiNote(hanziToAddNoteList):
 
     # Reset collection and main window
 
+    showInfo("Resetting Collection")
     mw.col.reset()
     showInfo("collection has been reset")
     mw.progress.finish()
@@ -601,6 +612,11 @@ def getKanjiDefinition_v2(kanjiInput):
                         KanjiDef_meaning = KanjiDef_meaning + mList + ', '
             if 'reading' in KanjiDefition_Result['reading_meaning']['rmgroup']:
                 for readingList in KanjiDefition_Result['reading_meaning']['rmgroup']['reading']:
+                    if isinstance(readingList, str):
+                        # showInfo(str(KanjiDefition_Result))
+                        # there's likely a typo in kanjidic json. This is a hotfix to prevent an error message
+                        continue
+
                     if readingList.get('-r_type') == 'pinyin':
                         KanjiDef_Pinyin = KanjiDef_Pinyin + readingList.get('#text') + ', '
                     elif readingList.get('-r_type') == 'ja_on':
@@ -743,6 +759,7 @@ def Generate_Slave_Hanzi_Index(nids):
 def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
     mw.checkpoint("Bulk-Generate TotalWordCount")
     mw.progress.start()
+
     reload_config()
     # HanziFreqList contains the list of 10k Hanzi Frequency as: [freq,HanS,HanT,Index,PinY,Meaning,index2]
     HanziFreqDict = {}
@@ -870,7 +887,7 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
 
     showInfo("List of Hanzi_In_Slave_Card_but_Not_in_Master: %s" % str(Slave_Hanzi_Dict.keys()))
     tooltip("Now test add note")
-    showInfo("final slave note to add = %s " % str(SlaveNoteToAdd))
+    #showInfo("final slave note to add = %s " % str(SlaveNoteToAdd))
     # dummyNoteToAdd = [[6352,"糗","",99.98774599,"qiǔ","","(surname)/dryprovisions",36],[6353,"鸮","鴞",99.9877646,
     # "xiāo","","",36],[6354,"蕰","",99.9877832,"wēn","","",36],[6355,"坼","",99.9878018,"chè","","tocrack/split/break/tochap",36]]
     createAnkiNote(SlaveNoteToAdd)
@@ -881,12 +898,14 @@ def BulkGenerateLearned_Hanzi_Cross_Indexing(nids):
 def setupMenu(browser):
     menu = browser.form.menuEdit
     menu.addSeparator()
-    a = menu.addAction('Bulk_Generate_Dynamic_Kanji_Deck_From_Sentence_Decks')
+    a = menu.addAction('Bulk_Generate_Dynamic_Hanja_Deck_From_Sentence_Decks')
     a.triggered.connect(lambda _, b=browser: onBulkGenerateLearned_Hanzi_Cross_Indexing(b))
 
 
 def onBulkGenerateLearned_Hanzi_Cross_Indexing(browser):
     nids = browser.selectedNotes()
+
+
     if not nids:
         tooltip("No cards selected.")
         return
